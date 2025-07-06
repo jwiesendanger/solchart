@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>L1 Blockchain Metrics (2x2, Live Line Charts, 10min, Optimized)</title>
+    <title>L1 Blockchain Metrics (2x2, Static Test)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         body {
@@ -24,13 +24,7 @@
             max-width: 100%;
             max-height: 100%;
         }
-        #refresh-indicator, #error-message {
-            text-align: center;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-        #refresh-indicator { color: #333; }
-        #error-message { color: #ff0000; display: none; }
+        #refresh-indicator { text-align: center; margin-top: 10px; font-size: 14px; color: #333; }
     </style>
 </head>
 <body>
@@ -40,8 +34,7 @@
         <div class="chart-box"><canvas id="scalabilityChart"></canvas></div>
         <div class="chart-box"><canvas id="ecosystemDiversityChart"></canvas></div>
     </div>
-    <div id="refresh-indicator">Last Refresh: Initializing...</div>
-    <div id="error-message">Error: Connection issue. Retrying...</div>
+    <div id="refresh-indicator">Last Refresh: Static Data</div>
 
     <script>
         try {
@@ -56,36 +49,40 @@
             ];
             const borderColors = colors.map(c => c.replace('0.8', '1'));
 
-            // Initial data arrays (100-minute window, 10-min increments)
-            let timestamps = Array(10).fill().map((_, i) => new Date(Date.now() - (9 - i) * 600000).toLocaleTimeString('en-US', { timeZone: 'America/New_York' }));
-            let stablecoinData = Array(6).fill().map(() => Array(10).fill(0));
-            stablecoinData[0] = Array(10).fill(135.4); // Ethereum
-            stablecoinData[1] = Array(10).fill(66.2);  // Tron
-            stablecoinData[2] = Array(10).fill(12.5);  // Solana (will update live)
-            stablecoinData[3] = Array(10).fill(7.0);   // BNB Chain
-            stablecoinData[4] = Array(10).fill(3.5);   // Arbitrum
-            stablecoinData[5] = Array(10).fill(2.0);   // Polygon
-            let tvlToSupplyData = Array(6).fill().map(() => Array(10).fill(0));
-            tvlToSupplyData[0] = Array(10).fill(0.492); // Ethereum
-            tvlToSupplyData[1] = Array(10).fill(0.112); // Tron
-            tvlToSupplyData[2] = Array(10).fill(0.947); // Solana
-            tvlToSupplyData[3] = Array(10).fill(0.843); // BNB Chain
-            tvlToSupplyData[4] = Array(10).fill(0.874); // Arbitrum
-            tvlToSupplyData[5] = Array(10).fill(0.450); // Polygon
-            let scalabilityData = Array(6).fill().map(() => Array(10).fill(0));
-            scalabilityData[0] = Array(10).fill(20);    // Ethereum
-            scalabilityData[1] = Array(10).fill(2000);  // Tron
-            scalabilityData[2] = Array(10).fill(2500);  // Solana
-            scalabilityData[3] = Array(10).fill(200);   // BNB Chain
-            scalabilityData[4] = Array(10).fill(4000);  // Arbitrum
-            scalabilityData[5] = Array(10).fill(700);   // Polygon
-            let ecosystemData = Array(6).fill().map(() => Array(10).fill(0));
-            ecosystemData[0] = Array(10).fill(4000);    // Ethereum
-            ecosystemData[1] = Array(10).fill(1000);    // Tron
-            ecosystemData[2] = Array(10).fill(2000);    // Solana
-            ecosystemData[3] = Array(10).fill(1500);    // BNB Chain
-            ecosystemData[4] = Array(10).fill(500);     // Arbitrum
-            ecosystemData[5] = Array(10).fill(1000);    // Polygon
+            // Static data arrays (100-minute window, 10-min increments)
+            const timestamps = Array(10).fill().map((_, i) => new Date(Date.now() - (9 - i) * 600000).toLocaleTimeString('en-US', { timeZone: 'America/New_York' }));
+            const stablecoinData = [
+                Array(10).fill(135.4), // Ethereum
+                Array(10).fill(66.2),  // Tron
+                Array(10).fill(12.5),  // Solana
+                Array(10).fill(7.0),   // BNB Chain
+                Array(10).fill(3.5),   // Arbitrum
+                Array(10).fill(2.0)    // Polygon
+            ];
+            const tvlToSupplyData = [
+                Array(10).fill(0.492), // Ethereum
+                Array(10).fill(0.112), // Tron
+                Array(10).fill(0.947), // Solana
+                Array(10).fill(0.843), // BNB Chain
+                Array(10).fill(0.874), // Arbitrum
+                Array(10).fill(0.450)  // Polygon
+            ];
+            const scalabilityData = [
+                Array(10).fill(20),    // Ethereum
+                Array(10).fill(2000),  // Tron
+                Array(10).fill(2500),  // Solana
+                Array(10).fill(200),   // BNB Chain
+                Array(10).fill(4000),  // Arbitrum
+                Array(10).fill(700)    // Polygon
+            ];
+            const ecosystemData = [
+                Array(10).fill(4000),    // Ethereum
+                Array(10).fill(1000),    // Tron
+                Array(10).fill(2000),    // Solana
+                Array(10).fill(1500),    // BNB Chain
+                Array(10).fill(500),     // Arbitrum
+                Array(10).fill(1000)     // Polygon
+            ];
 
             // Chart instances with labels and auto-scaling y-axes
             const charts = {
@@ -175,103 +172,9 @@
                 })
             };
 
-            // WebSocket with reconnection logic
-            const ws = new WebSocket('wss://your-quicknode-endpoint.example'); // Replace with your QuickNode WSS URL
-            const refreshIndicator = document.getElementById('refresh-indicator');
-            const errorMessage = document.getElementById('error-message');
-            let reconnectTimeout;
-
-            function connectWebSocket() {
-                ws.onopen = () => {
-                    ws.send(JSON.stringify({
-                        jsonrpc: '2.0',
-                        id: 1,
-                        method: 'accountSubscribe',
-                        params: [
-                            'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC mint address
-                            { commitment: 'confirmed', encoding: 'jsonParsed' }
-                        ]
-                    }));
-                    errorMessage.style.display = 'none';
-                    updateChartsAndTime();
-                };
-
-                ws.onmessage = (event) => {
-                    const response = JSON.parse(event.data);
-                    if (response.result && response.params) {
-                        const accountInfo = response.params.result.value;
-                        if (accountInfo && accountInfo.data && accountInfo.data.parsed) {
-                            const supply = accountInfo.data.parsed.info.supply / 1_000_000; // Convert lamports to USDC
-                            stablecoinData[2].shift();
-                            stablecoinData[2].push(supply);
-                            interpolateAndUpdate();
-                            console.log(`Live Solana USDC Supply: $${supply.toFixed(2)}B`);
-                        }
-                    }
-                };
-
-                ws.onerror = () => {
-                    errorMessage.style.display = 'block';
-                    reconnect();
-                };
-
-                ws.onclose = () => {
-                    errorMessage.style.display = 'block';
-                    reconnect();
-                };
-            }
-
-            function reconnect() {
-                if (reconnectTimeout) clearTimeout(reconnectTimeout);
-                reconnectTimeout = setTimeout(() => {
-                    ws = new WebSocket('wss://your-quicknode-endpoint.example'); // Replace with your QuickNode WSS URL
-                    connectWebSocket();
-                }, 5000); // Retry after 5 seconds
-            }
-
-            connectWebSocket();
-
-            // Smoother updates with 1-minute interpolation
-            let lastSupply = 12.5;
-            function interpolateAndUpdate() {
-                const now = new Date();
-                const nextUpdate = new Date(Math.ceil(now / 600000) * 600000);
-                const timeDiff = (nextUpdate - now) / 60000; // Minutes until next 10-min update
-                if (timeDiff < 10) {
-                    const supply = stablecoinData[2][stablecoinData[2].length - 1];
-                    const interpolated = lastSupply + (supply - lastSupply) * (1 - timeDiff / 10);
-                    stablecoinData[2][stablecoinData[2].length - 1] = interpolated;
-                    lastSupply = interpolated;
-                }
-                updateChartsAndTime();
-            }
-
-            // Update charts and timestamps every 10 minutes
-            setInterval(updateChartsAndTime, 600000); // 10 minutes = 600,000 ms
-            setInterval(interpolateAndUpdate, 60000); // 1 minute = 60,000 ms for smoother updates
-
-            function updateChartsAndTime() {
-                timestamps.shift();
-                timestamps.push(new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York' }));
-                charts.stablecoinSupplyChart.data.labels = timestamps;
-                charts.tvlToSupplyChart.data.labels = timestamps;
-                charts.scalabilityChart.data.labels = timestamps;
-                charts.ecosystemDiversityChart.data.labels = timestamps;
-                charts.stablecoinSupplyChart.data.datasets[0].data = stablecoinData.map(row => row.slice(-10));
-                charts.tvlToSupplyChart.data.datasets[0].data = tvlToSupplyData.map(row => row.slice(-10));
-                charts.scalabilityChart.data.datasets[0].data = scalabilityData.map(row => row.slice(-10));
-                charts.ecosystemDiversityChart.data.datasets[0].data = ecosystemData.map(row => row.slice(-10));
-                charts.stablecoinSupplyChart.update('active');
-                charts.tvlToSupplyChart.update('active');
-                charts.scalabilityChart.update('active');
-                charts.ecosystemDiversityChart.update('active');
-                refreshIndicator.textContent = `Last Refresh: ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })}`;
-            }
-
         } catch (error) {
             console.error('Error rendering charts:', error);
-            errorMessage.style.display = 'block';
-            errorMessage.textContent = `Error: ${error.message}. Retrying...`;
+            document.getElementById('refresh-indicator').textContent = `Error: ${error.message}`;
         }
     </script>
 </body>
